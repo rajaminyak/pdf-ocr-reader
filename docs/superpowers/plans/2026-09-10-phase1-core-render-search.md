@@ -815,6 +815,30 @@ git commit -m "test: core imports without PySide6; record Phase 1 validation"
 
 ---
 
+## Phase 1 validation results
+
+26 tests pass. Real-PDF smoke (`E:` corpus was not mounted; used
+`C:\Users\Ridho\Documents\Inspection Report - 31-E-101.pdf`, a real 2-page
+equipment inspection report):
+
+| Check | Result |
+|---|---|
+| Born-digital synthetic fixture — `info` / `search` | text layer detected, search returns correct pages + bboxes |
+| Image-only synthetic fixture | every page "image only", search returns nothing (OCR is Phase 2) |
+| Real inspection report | both pages "image only" |
+| Corrupt / unreadable file | `DocumentError` → clean message, exit 1, no traceback |
+
+**Finding — broken-font "text layer" (fixed in this phase):** the real
+inspection report's page 1 *has* a PyMuPDF text layer, but it is a
+custom-encoded font with no ToUnicode map — `get_text()` returns
+punctuation and 1-3 letter fragments (`! " # $ % OIF87 RIF87 …`), not
+words. A naive char-count check called it "text layer" and search would
+have shown gibberish. `textlayer._is_readable` now requires ≥3 letter-runs
+of 4+ chars that contain a vowel, covering ≥20% of the text — the garbled
+page scores 0 real words and is correctly treated as image-only (an OCR
+candidate for Phase 2). Synthetic prose and short real pages ("pompa
+sekali saja disebut") still pass.
+
 ## Self-Review
 
 **Spec coverage (Phase 1 slice):** `renderer`, `textlayer`, `document`
