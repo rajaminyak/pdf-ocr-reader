@@ -6,6 +6,18 @@ import fitz
 import pytest
 
 
+@pytest.hookimpl(trylast=True)
+def pytest_sessionfinish(session, exitstatus):
+    # onnxruntime (RapidOCR) + Qt leave non-joinable threads that can hang the
+    # interpreter shutdown on Windows. The terminal summary has already been
+    # written by the time this trylast hook runs; skip the hanging teardown.
+    import sys
+
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(int(exitstatus))
+
+
 @pytest.fixture(autouse=True)
 def _isolate_cache(tmp_path_factory, monkeypatch):
     """Every test writes its OCR cache under a throwaway dir, never the real

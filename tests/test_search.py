@@ -56,3 +56,14 @@ def test_search_spans_ranks_and_returns_boxes():
     hits = search_spans(spans, "pump")
     assert [h.page_index for h in hits] == [1, 0]
     assert hits[0].span_bboxes == [(0, 0, 20, 5)]
+
+
+def test_snippet_starts_and_ends_on_word_boundaries():
+    from pdf_ocr_reader.search import _snippet
+
+    text = "alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu"
+    s = _snippet(text, "epsilon", 24)
+    assert s.startswith("...") and s.endswith("...")
+    core = s.strip(".").strip()
+    assert core.split()[0] in {"delta", "gamma", "epsilon", "beta"}
+    assert not core.endswith(("thet", "iot", "kapp"))

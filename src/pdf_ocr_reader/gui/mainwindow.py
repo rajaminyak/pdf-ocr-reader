@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 
 from pdf_ocr_reader import cache
 from pdf_ocr_reader.document import Document, DocumentError
+from pdf_ocr_reader.exporter import ExportError, save_searchable_pdf
 from pdf_ocr_reader.gui.config import load_config, save_config
 from pdf_ocr_reader.gui.pageview import PageGraphicsView, scene_rect_for_span
 from pdf_ocr_reader.gui.worker import OcrWorker, run_in_thread
@@ -146,9 +147,9 @@ class MainWindow(QMainWindow):
         file_menu = m.addMenu("&File")
         self._menu_action(file_menu, "&Open…", self._choose_file, QKeySequence.Open)
         self.save_action = self._menu_action(
-            file_menu, "&Save searchable copy…", lambda: None, QKeySequence.Save
+            file_menu, "&Save searchable copy…", self._choose_export_path, QKeySequence.Save
         )
-        self.save_action.setEnabled(False)  # Phase 4
+        self.save_action.setEnabled(False)
         file_menu.addSeparator()
         self._menu_action(file_menu, "E&xit", self.close)
 
@@ -166,7 +167,7 @@ class MainWindow(QMainWindow):
         if path:
             self.open_pdf(path)
 
-    def open_pdf(self, path: str) -> None:
+    def open_pdf(self, path: str, *, background_ocr: bool = True) -> None:
         if self._worker is not None:
             self._worker.stop()
         if self._doc is not None:
@@ -194,7 +195,9 @@ class MainWindow(QMainWindow):
         self.page_total.setText(f"of {self._doc.page_count}")
         self._populate_thumbnails()
         self.go_to_page(0)
-        self._start_worker(path)
+        self.save_action.setEnabled(True)
+        if background_ocr:
+            self._start_worker(path)
 
     def _populate_thumbnails(self) -> None:
         self.thumbs.clear()
@@ -290,6 +293,28 @@ class MainWindow(QMainWindow):
         self.view.set_highlights(rects)
 
     # ---------- menu actions ----------
+
+    def _choose_export_path(self) -> None:
+        if self._doc is None:
+            return
+        stem = os.path.splitext(os.path.basename(self._doc.path))[0]
+        default = os.path.join(self.config.last_dir or "", f"{stem} (searchable).pdf")
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save searchable copy", default, "PDF files (*.pdf)"
+        )
+        if path:
+            self.export_searchable(path)
+
+    def export_searchable(self, path: str) -> None:
+        if self._doc is None:
+            return
+        try:
+            self._doc.ocr_all()  # ensure every image-only page has text
+            save_searchable_pdf(self._doc, path)
+        except (ExportError, OSError) as exc:
+            QMessageBox.critical(self, "Save failed", str(exc))
+            return
+        QMessageBox.information(self, "Saved", f"Searchable copy written to:\n{path}")
 
     def _clear_cache(self) -> None:
         count = cache.clear()

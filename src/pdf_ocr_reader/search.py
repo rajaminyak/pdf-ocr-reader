@@ -12,6 +12,13 @@ def _snippet(text: str, term: str, width: int) -> str:
     start = max(0, pos - width // 3)
     end = min(len(text), start + width)
     piece = text[start:end]
+
+    # trim partial words at the ends so the snippet reads cleanly
+    if start > 0 and " " in piece:
+        piece = piece[piece.index(" ") + 1 :]
+    if end < len(text) and " " in piece:
+        piece = piece[: piece.rindex(" ")]
+
     return ("..." if start > 0 else "") + piece + ("..." if end < len(text) else "")
 
 
