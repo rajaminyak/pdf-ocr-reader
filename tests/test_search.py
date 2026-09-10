@@ -43,3 +43,16 @@ def test_hit_carries_matching_span_bboxes(born_digital_pdf):
 def test_blank_query_returns_nothing(born_digital_pdf):
     with Document.open(born_digital_pdf) as doc:
         assert search(doc, "   ") == []
+
+
+def test_search_spans_ranks_and_returns_boxes():
+    from pdf_ocr_reader.models import Span
+    from pdf_ocr_reader.search import search_spans
+
+    spans = {
+        0: [Span("pump seen once here", (0, 0, 10, 5))],
+        1: [Span("pump pump pump three times", (0, 0, 20, 5))],
+    }
+    hits = search_spans(spans, "pump")
+    assert [h.page_index for h in hits] == [1, 0]
+    assert hits[0].span_bboxes == [(0, 0, 20, 5)]
