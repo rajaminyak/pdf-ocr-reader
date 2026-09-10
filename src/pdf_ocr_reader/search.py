@@ -8,11 +8,11 @@ def _snippet(text: str, term: str, width: int) -> str:
     lowered = text.lower()
     pos = lowered.find(term)
     if pos == -1:
-        return text[:width] + ("…" if len(text) > width else "")
+        return text[:width] + ("..." if len(text) > width else "")
     start = max(0, pos - width // 3)
     end = min(len(text), start + width)
     piece = text[start:end]
-    return ("…" if start > 0 else "") + piece + ("…" if end < len(text) else "")
+    return ("..." if start > 0 else "") + piece + ("..." if end < len(text) else "")
 
 
 def search(doc: Document, query: str, *, snippet_chars: int = 160, ocr: bool = True) -> list[PageHit]:
