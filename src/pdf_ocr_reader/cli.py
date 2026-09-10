@@ -22,6 +22,10 @@ def main(argv: list[str] | None = None) -> int:
     search_p.add_argument("query", nargs="+")
     search_p.add_argument("--no-ocr", action="store_true", help="search only existing text (skip OCR)")
 
+    export_p = sub.add_parser("export", help="Write a Ctrl+F-searchable copy of the PDF")
+    export_p.add_argument("pdf")
+    export_p.add_argument("out")
+
     args = parser.parse_args(argv)
 
     if not os.path.isfile(args.pdf):
@@ -51,6 +55,18 @@ def main(argv: list[str] | None = None) -> int:
 
             doc.ocr_all(progress=_progress)
             print(f"OCR complete: {done_count['n']} page(s)")
+            return 0
+
+        if args.command == "export":
+            from pdf_ocr_reader.exporter import ExportError, save_searchable_pdf
+
+            doc.ocr_all(progress=lambda d, t: print(f"OCR {d}/{t}", file=sys.stderr))
+            try:
+                save_searchable_pdf(doc, args.out)
+            except ExportError as exc:
+                print(str(exc))
+                return 1
+            print(f"Saved searchable copy: {args.out}")
             return 0
 
         from pdf_ocr_reader.search import search as run_search

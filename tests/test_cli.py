@@ -40,3 +40,22 @@ def test_search_ocrs_then_finds_text_on_a_scanned_page(capsys, scanned_pdf):
 def test_search_no_ocr_flag_skips_ocr(capsys, scanned_pdf):
     assert main(["search", scanned_pdf, "turbine", "--no-ocr"]) == 0
     assert "0 result(s)" in capsys.readouterr().out
+
+
+def test_export_command_writes_a_searchable_pdf(capsys, scanned_pdf, tmp_path):
+    out = tmp_path / "out.pdf"
+    assert main(["export", scanned_pdf, str(out)]) == 0
+    assert out.is_file()
+    assert "Saved searchable copy" in capsys.readouterr().out
+
+    import fitz
+
+    d = fitz.open(str(out))
+    got = d[0].get_text().lower()
+    d.close()
+    assert "turbine" in got or "bearing" in got
+
+
+def test_export_over_source_exits_one(capsys, scanned_pdf):
+    assert main(["export", scanned_pdf, scanned_pdf]) == 1
+    assert "source" in capsys.readouterr().out.lower()
