@@ -46,12 +46,14 @@ class Document:
 
     # ---------- text ----------
 
-    def page_spans(self, page_index: int) -> list[Span]:
+    def page_spans(self, page_index: int, *, ocr: bool = True) -> list[Span]:
         native = textlayer.native_page_spans(self._doc[page_index])
         if native is not None:
             return native
         if page_index in self._ocr_pages:
             return self._ocr_pages[page_index]
+        if not ocr:
+            return []
         spans = self._ocr_page(page_index)
         self._ocr_pages[page_index] = spans
         self._persist_cache()

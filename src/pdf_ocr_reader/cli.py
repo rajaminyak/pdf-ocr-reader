@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import sys
 
 from pdf_ocr_reader.document import Document, DocumentError
 
@@ -13,9 +14,13 @@ def main(argv: list[str] | None = None) -> int:
     info_p = sub.add_parser("info", help="Page count and per-page text-layer status")
     info_p.add_argument("pdf")
 
-    search_p = sub.add_parser("search", help="Search inside a PDF (native text only in Phase 1)")
+    ocr_p = sub.add_parser("ocr", help="OCR every image-only page and cache the result")
+    ocr_p.add_argument("pdf")
+
+    search_p = sub.add_parser("search", help="Search inside a PDF (OCRs image-only pages first)")
     search_p.add_argument("pdf")
     search_p.add_argument("query", nargs="+")
+    search_p.add_argument("--no-ocr", action="store_true", help="search only existing text (skip OCR)")
 
     args = parser.parse_args(argv)
 
@@ -37,9 +42,23 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"p.{i + 1}: {kind}")
             return 0
 
+        if args.command == "ocr":
+            done_count = {"n": 0}
+
+            def _progress(done, total):
+                done_count["n"] = done
+                print(f"OCR {done}/{total}", file=sys.stderr)
+
+            doc.ocr_all(progress=_progress)
+            print(f"OCR complete: {done_count['n']} page(s)")
+            return 0
+
         from pdf_ocr_reader.search import search as run_search
 
-        hits = run_search(doc, " ".join(args.query))
+        if not args.no_ocr:
+            doc.ocr_all(progress=lambda d, t: print(f"OCR {d}/{t}", file=sys.stderr))
+
+        hits = run_search(doc, " ".join(args.query), ocr=not args.no_ocr)
         print(f"{len(hits)} result(s)")
         for h in hits:
             print(f"p.{h.page_index + 1}  {h.snippet}")

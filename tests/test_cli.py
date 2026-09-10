@@ -23,3 +23,20 @@ def test_search_no_results_is_exit_zero(capsys, born_digital_pdf):
 def test_missing_file_exits_one(capsys, tmp_path):
     assert main(["info", str(tmp_path / "nope.pdf")]) == 1
     assert "not found" in capsys.readouterr().out.lower()
+
+
+def test_ocr_command_reports_completion(capsys, scanned_pdf):
+    assert main(["ocr", scanned_pdf]) == 0
+    assert "OCR complete: 1 page" in capsys.readouterr().out
+
+
+def test_search_ocrs_then_finds_text_on_a_scanned_page(capsys, scanned_pdf):
+    assert main(["search", scanned_pdf, "turbine"]) == 0
+    out = capsys.readouterr().out
+    assert "1 result(s)" in out
+    assert "p.1" in out
+
+
+def test_search_no_ocr_flag_skips_ocr(capsys, scanned_pdf):
+    assert main(["search", scanned_pdf, "turbine", "--no-ocr"]) == 0
+    assert "0 result(s)" in capsys.readouterr().out

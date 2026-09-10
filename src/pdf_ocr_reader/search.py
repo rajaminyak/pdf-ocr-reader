@@ -15,14 +15,14 @@ def _snippet(text: str, term: str, width: int) -> str:
     return ("…" if start > 0 else "") + piece + ("…" if end < len(text) else "")
 
 
-def search(doc: Document, query: str, *, snippet_chars: int = 160) -> list[PageHit]:
+def search(doc: Document, query: str, *, snippet_chars: int = 160, ocr: bool = True) -> list[PageHit]:
     terms = [t for t in query.lower().split() if t]
     if not terms:
         return []
 
     hits: list[tuple[int, int, PageHit]] = []  # (-score, page_index, hit)
     for page_index in range(doc.page_count):
-        spans = doc.page_spans(page_index)
+        spans = doc.page_spans(page_index, ocr=ocr)
         text = " ".join(s.text for s in spans)
         lowered = text.lower()
         if not all(term in lowered for term in terms):
