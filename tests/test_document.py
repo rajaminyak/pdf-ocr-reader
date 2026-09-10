@@ -19,11 +19,13 @@ def test_page_spans_and_text_from_born_digital(born_digital_pdf):
         assert any(s.text == "reactor" for s in doc.page_spans(0))
 
 
-def test_image_only_page_has_no_text_layer_and_empty_spans(scanned_pdf):
+def test_image_only_page_has_no_native_text_layer(scanned_pdf, tmp_path, monkeypatch):
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
     with Document.open(scanned_pdf) as doc:
         assert doc.has_text_layer(0) is False
-        assert doc.page_spans(0) == []
-        assert doc.full_page_text(0) == ""
+        # Phase 2: page_spans falls through to OCR for an image-only page
+        text = doc.full_page_text(0).lower()
+        assert "turbine" in text or "bearing" in text
 
 
 def test_corrupt_file_raises_document_error(tmp_path):

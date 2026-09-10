@@ -2,6 +2,13 @@ import fitz
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def _isolate_cache(tmp_path_factory, monkeypatch):
+    """Every test writes its OCR cache under a throwaway dir, never the real
+    %LOCALAPPDATA%\\PdfOcrReader."""
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path_factory.mktemp("localappdata")))
+
+
 @pytest.fixture
 def born_digital_pdf(tmp_path):
     """A 2-page PDF with a real text layer."""
