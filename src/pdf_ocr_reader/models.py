@@ -10,6 +10,14 @@ class Span:
     text: str
     bbox: BBox
 
+    def as_dict(self) -> dict:
+        return {"text": self.text, "bbox": list(self.bbox)}
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "Span":
+        x0, y0, x1, y1 = d["bbox"]
+        return cls(text=d["text"], bbox=(float(x0), float(y0), float(x1), float(y1)))
+
 
 @dataclass(frozen=True)
 class RenderedPage:

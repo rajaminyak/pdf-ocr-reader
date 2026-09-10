@@ -18,3 +18,9 @@ def test_page_hit_holds_index_snippet_and_span_bboxes():
     assert h.page_index == 3
     assert "reactor" in h.snippet
     assert h.span_bboxes == [(1.0, 2.0, 3.0, 4.0)]
+
+
+def test_span_round_trips_through_dict():
+    s = Span(text="corrosion at the nozzle", bbox=(12.5, 30.0, 400.0, 55.0))
+    assert Span.from_dict(s.as_dict()) == s
+    assert s.as_dict() == {"text": "corrosion at the nozzle", "bbox": [12.5, 30.0, 400.0, 55.0]}
