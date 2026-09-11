@@ -155,6 +155,21 @@ git commit -m "docs: record Phase 5 installer validation"
 
 ---
 
+## Phase 5 validation results
+
+| Step | Result |
+|---|---|
+| Clean-venv PyInstaller build | 364 MB onedir, no ML bloat; exit 0; ~15 min |
+| Bundled | `_internal\rapidocr\models\*.onnx` (3), `_internal\PySide6\plugins\platforms\qwindows.dll` |
+| Frozen exe, `PdfOcrReader.exe <scan.pdf>` | opens, OCRs both pages, cache written |
+| Inno compile | `packaging\output\PdfOcrReader-Setup.exe`, **123 MB**, 151 s |
+| Silent install (`/VERYSILENT /DIR=...`) | exit 0, all files + uninstaller present, no admin prompt |
+| Installed exe on a real scan | OCR + cache work (models load from the install dir) |
+| Uninstall (`unins000.exe /VERYSILENT`) | exit 0, install dir emptied, **`%LOCALAPPDATA%\PdfOcrReader` (config + cache) preserved** |
+
+Distribution: hand teammates `PdfOcrReader-Setup.exe`. Per-user install, no
+admin. Rebuild via `packaging/BUILD.md`.
+
 ## Self-Review
 
 Reuse of a proven setup. The one real risk — a fat build from a dirty
