@@ -4,9 +4,6 @@ from PySide6.QtWidgets import QApplication
 from pdf_ocr_reader.gui.pageview import PageGraphicsView, scene_rect_for_span
 
 
-@pytest.fixture(scope="module")
-def qapp():
-    return QApplication.instance() or QApplication([])
 
 
 def test_native_span_scales_from_points_to_render_dpi():

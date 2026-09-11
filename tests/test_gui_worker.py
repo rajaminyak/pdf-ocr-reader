@@ -4,9 +4,6 @@ from PySide6.QtCore import QCoreApplication
 from pdf_ocr_reader.gui.worker import OcrWorker
 
 
-@pytest.fixture(scope="module")
-def qapp():
-    return QCoreApplication.instance() or QCoreApplication([])
 
 
 def test_worker_emits_spans_for_every_page_and_finishes(qapp, scanned_pdf):

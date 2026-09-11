@@ -4,9 +4,6 @@ from PySide6.QtWidgets import QApplication
 from pdf_ocr_reader.gui.mainwindow import MainWindow
 
 
-@pytest.fixture(scope="module")
-def qapp():
-    return QApplication.instance() or QApplication([])
 
 
 def test_open_shows_first_page_and_thumbnails(qapp, born_digital_pdf):

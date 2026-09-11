@@ -6,16 +6,15 @@ import fitz
 import pytest
 
 
-@pytest.hookimpl(trylast=True)
-def pytest_sessionfinish(session, exitstatus):
-    # onnxruntime (RapidOCR) + Qt leave non-joinable threads that can hang the
-    # interpreter shutdown on Windows. The terminal summary has already been
-    # written by the time this trylast hook runs; skip the hanging teardown.
-    import sys
+@pytest.fixture(scope="session")
+def qapp():
+    """One QApplication for the whole test session — creating/tearing down
+    multiple Qt apps across GUI test files hangs on Windows."""
+    from PySide6.QtWidgets import QApplication
 
-    sys.stdout.flush()
-    sys.stderr.flush()
-    os._exit(int(exitstatus))
+    return QApplication.instance() or QApplication([])
+
+
 
 
 @pytest.fixture(autouse=True)

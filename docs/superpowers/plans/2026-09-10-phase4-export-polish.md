@@ -299,6 +299,29 @@ git commit -m "docs: record Phase 4 export validation"
 
 ---
 
+## Phase 4 validation results
+
+Real-PDF: `C:\Users\Ridho\Documents\Inspection Report - 31-E-101.pdf` via
+`pdf-ocr-reader export`.
+
+| | |
+|---|---|
+| Size | 62 KB → 80 KB (+18 KB for the text layer) |
+| Page 1 searchable chars | 2074 (was an unusable broken-font layer) |
+| `search_for("hydrojet")` in output | found — a word that was **only on the scanned page** |
+| `search_for("reboiler")` | found, sensible page rect |
+| Source | unchanged |
+
+**Note:** page 1 carried a broken-encoding "text layer" (Phase 1's
+`_is_readable` correctly treats it as image-only, so the exporter OCRs it).
+The source's junk text is still copied into the output underneath the new
+invisible OCR layer — harmless (invisible, and `search_for` matches the OCR
+text) but not pristine. Stripping a source text layer risks losing good
+content on mixed docs, so it is left in.
+
+Word-boundary snippets confirmed (`_snippet` unit test): `...delta epsilon
+zeta...` instead of `...elta epsilon zet...`.
+
 ## Self-Review
 
 **Spec coverage:** "Save searchable copy" — invisible text layer, source
