@@ -12,3 +12,6 @@ packaging/output/
 # local scratch
 *.db
 scratch/
+
+# confidential sample docs - never commit
+sample documents/
